@@ -15,6 +15,17 @@ plugins:
       host: localhost
       port: 5432
       user: northwind_user
+
+  - name: tap-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
+    config:
+      files:
+        - entity: values
+          path: ../data/order_details.csv
+          keys:
+            - order_id
+
   utilities:
   - name: airflow
     namespace: airflow
