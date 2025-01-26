@@ -6,6 +6,15 @@ environments:
 - name: staging
 - name: prod
 plugins:
+  extractors:
+  - name: tap-postgres
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-postgres.git
+    config:
+      database: northwind
+      host: localhost
+      port: 5432
+      user: northwind_user
   utilities:
   - name: airflow
     namespace: airflow
