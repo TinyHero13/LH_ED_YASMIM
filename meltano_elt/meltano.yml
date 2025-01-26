@@ -26,6 +26,13 @@ plugins:
           keys:
             - order_id
 
+  loaders:
+  - name: target-csv
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/target-csv.git
+    config:
+      output_path: ../data/csv/2025-01-26/
+
   utilities:
   - name: airflow
     namespace: airflow
