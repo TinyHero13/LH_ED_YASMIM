@@ -3,6 +3,12 @@ default_environment: dev
 project_id: 2ac138b3-8d13-4e52-a782-a68feef9c19c
 environments:
 - name: dev
+  config:
+    plugins:
+      loaders:
+      - name: target-csv
+        config:
+          output_path: ../data/csv/2025-01-26
 - name: staging
 - name: prod
 plugins:
@@ -21,17 +27,17 @@ plugins:
     pip_url: git+https://github.com/MeltanoLabs/tap-csv.git
     config:
       files:
-        - entity: values
-          path: ../data/order_details.csv
-          keys:
-            - order_id
+      - entity: order_details
+        path: ../data/order_details.csv
+        keys:
+        - order_id
 
   loaders:
   - name: target-csv
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/target-csv.git
     config:
-      output_path: ../data/csv/2025-01-26/
+      output_path: ../data/csv/2025-01-26
 
   utilities:
   - name: airflow
