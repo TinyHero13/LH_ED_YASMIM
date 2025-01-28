@@ -1,49 +1,33 @@
 from tasks.folder_verify import folder_verify
-
-from datetime import datetime, timedelta
-
+from datetime import datetime
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
-import os
-
 PROJECT_ROOT = '/home/mim/projects/code-challenge-indicium/meltano_elt'
-MELTANO_BIN = ".meltano/run/bin"
-
-DEFAULT_ARGS = {
-    "owner": "Yasmim Abrahao",
-    "depends_on_past": False,
-    "catchup": False
-}
-
 tables = [
-    "categories",
-    "customer_customer_demo",
-    "customer_demographics",
-    "customers",
-    "employee_territories",
-    "employees",
-    "orders",
-    "products",
-    "region",
-    "shippers",
-    "territories",
-    "us_states"
+    "categories", "customer_customer_demo", "customer_demographics",
+    "customers", "employee_territories", "employees", "orders",
+    "products", "region", "shippers", "territories", "us_states"
 ]
-
 
 with DAG(
     dag_id="indicium-northwind-elt",
-    start_date=datetime(2025, 1, 1),
+    start_date=datetime(2025, 1, 20),
     schedule="@daily",
-):
-    
+    catchup=True
+) as dag:
+
     csv_to_csv = BashOperator(
         task_id="csv_to_csv",
-        bash_command=f"""cd {PROJECT_ROOT}; 
-                        meltano config target-csv set output_path {folder_verify('csv')}; 
-                        meltano el tap-csv target-csv"""
-    )     
+        bash_command=f"""
+            cd {PROJECT_ROOT};
+            mkdir -p ../data/csv/{{{{ ds }}}};
+            meltano config target-csv set output_path ../data/csv/{{{{ ds }}}};
+            meltano config tap-csv set files '[{{"entity": "order_details", "path": "../data/order_details.csv", "keys": ["order_id"]}}]';
+            meltano el tap-csv target-csv;
+            meltano config tap-csv unset files;
+        """
+    )
 
     postgres_to_csv = BashOperator(
         task_id="postgres_to_csv",
@@ -51,9 +35,52 @@ with DAG(
             cd {PROJECT_ROOT};
             for table in {' '.join(tables)};
             do
-                mkdir -p ../data/postgres/$table/$(date +%F);
-                meltano config target-csv set output_path ../data/postgres/$table/$(date +%F);
+                mkdir -p "../data/postgres/$table/{{{{ ds }}}}";
+                meltano config target-csv set output_path "../data/postgres/$table/{{{{ ds }}}}";
                 meltano el tap-postgres target-csv --select "public-$table.*";
+                CSV_PATH="../data/postgres/$table/{{{{ ds }}}}/public-$table.csv";
+                if [ ! -f "$CSV_PATH" ]; then
+                    COLUMNS=$(meltano invoke tap-postgres --discover | \
+                        jq -r '.streams[] | select(.stream == "public-$table") | .schema.properties | keys_unsorted[]' | \
+                        tr '\n' ',');
+                    
+                    COLUMNS=${{COLUMNS%,}};
+                    echo "$COLUMNS" > "$CSV_PATH";
+                fi
             done
         """
     )
+
+    csv_to_postgres = BashOperator(
+        task_id="csv_to_postgres",
+        bash_command=f"""
+            cd {PROJECT_ROOT};
+            meltano config tap-csv set files '[{{"entity": "order_details", "path": "../data/csv/{{{{ ds }}}}/order_details.csv", "keys": ["order_id"]}}]';
+            meltano config target-postgres set default_target_schema public;
+            meltano el tap-csv target-postgres;
+
+            for table in {' '.join(tables)};
+            do
+                CSV_PATH="../data/postgres/$table/{{{{ ds }}}}/public-$table.csv"
+                
+                if [ ! -f "$CSV_PATH" ]; then
+                    echo "Creating CSV for $table";
+                    mkdir -p "../data/postgres/$table/{{{{ ds }}}}";
+                    echo "id" > "$CSV_PATH";
+                    echo "0" >> "$CSV_PATH";
+                fi
+
+                if [ $(wc -l < "$CSV_PATH") -eq 1 ]; then
+                    echo "0" >> "$CSV_PATH";
+                fi
+
+                column_id=$(head -1 "$CSV_PATH" | cut -d ',' -f1);
+                meltano config tap-csv set files '[{{"entity": "'$table'", "path": "'"$CSV_PATH"'", "keys": ["'"$column_id"'"]}}]';
+                meltano el tap-csv target-postgres;
+            done
+            
+            meltano config tap-csv unset files;
+        """
+    )
+
+    [csv_to_csv, postgres_to_csv] >> csv_to_postgres
