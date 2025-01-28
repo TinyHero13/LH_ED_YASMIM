@@ -3,6 +3,7 @@ from datetime import datetime
 from airflow import DAG
 from airflow.operators.bash_operator import BashOperator
 
+## PROJECT_ROOT = '/seu/diretorio/atual/do/projeto'
 PROJECT_ROOT = '/home/mim/projects/code-challenge-indicium/meltano_elt'
 tables = [
     "categories", "customer_customer_demo", "customer_demographics",
@@ -12,9 +13,9 @@ tables = [
 
 with DAG(
     dag_id="indicium-northwind-elt",
-    start_date=datetime(2025, 1, 20),
+    start_date=datetime(2025, 1, 21),
     schedule="@daily",
-    catchup=True
+    catchup=False
 ) as dag:
 
     csv_to_csv = BashOperator(
