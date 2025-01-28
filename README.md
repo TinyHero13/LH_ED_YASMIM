@@ -1,84 +1,118 @@
-# Indicium Tech Code Challenge
+# Indicium - desafio de engenharia de dados
 
-Code challenge for Software Developer with focus in data projects.
+Este repositório contém a solução do [desafio de engenharia](https://github.com/TinyHero13/code-challenge-indicium/blob/main/README.md) de dados proposto pela Indicium. A solução implementa uma pipeline de dados utilizando as ferramentas Meltano e Apache Airflow, além de um banco de dados PostgreSQL.
 
+## 📑 Descrição do Desafio
+O desafio consiste em construir uma pipeline que:
 
-## Context
+- Extrai dados de duas fontes: um banco PostgreSQL (Northwind) e um arquivo CSV.
+- Escreve os dados localmente, organizados por fonte (csv ou postgres), tabela e data de execução.
+- Carrega os dados do armazenamento local para um banco de dados PostgreSQL.
+- Garante que os dados sejam processados de forma independente e rastreável, com suporte para reprocessamento de datas anteriores.
 
-At Indicium we have many projects where we develop the whole data pipeline for our client, from extracting data from many data sources to loading this data at its final destination, with this final destination varying from a data warehouse for a Business Intelligency tool to an api for integrating with third party systems.
+## 🛠 Ferramentas Utilizadas
 
-As a software developer with focus in data projects your mission is to plan, develop, deploy, and maintain a data pipeline.
+- Python: 3.11.5
+- Meltano: 3.6.0
+- Apache Airflow: 2.10.4
+- PostgreSQL: banco northwind e banco de destino northwind_processed.
 
+## 🖥️ Configuração do Ambiente
 
-## The Challenge
+### 1 - Instale as dependências
+Clone o repositório e instale as dependências do Python:
 
-We are going to provide 2 data sources, a PostgreSQL database and a CSV file.
-
-The CSV file represents details of orders from an ecommerce system.
-
-The database provided is a sample database provided by microsoft for education purposes called northwind, the only difference is that the **order_detail** table does not exists in this database you are beeing provided with. This order_details table is represented by the CSV file we provide.
-
-Schema of the original Northwind Database: 
-
-![image](https://user-images.githubusercontent.com/49417424/105997621-9666b980-608a-11eb-86fd-db6b44ece02a.png)
-
-Your challenge is to build a pipeline that extracts the data everyday from both sources and write the data first to local disk, and second to a PostgreSQL database. For this challenge, the CSV file and the database will be static, but in any real world project, both data sources would be changing constantly.
-
-Its important that all writing steps (writing data from inputs to local filesystem and writing data from local filesystem to PostgreSQL database) are isolated from each other, you shoud be able to run any step without executing the others.
-
-For the first step, where you write data to local disk, you should write one file for each table. This pipeline will run everyday, so there should be a separation in the file paths you will create for each source(CSV or Postgres), table and execution day combination, e.g.:
-
-```
-/data/postgres/{table}/2024-01-01/file.format
-/data/postgres/{table}/2024-01-02/file.format
-/data/csv/2024-01-02/file.format
+```bash
+git clone https://github.com/TinyHero13/code-challenge-indicium.git
+cd code-challenge-indicium
+pip install -r requirements.txt
 ```
 
-You are free to chose the naming and the format of the file you are going to save.
+Entre no diretório do meltano e instale suas dependências:
 
-At step 2, you should load the data from the local filesystem, which you have created, to the final database.
+```bash
+cd meltano_elt
+meltano install
+```
 
-The final goal is to be able to run a query that shows the orders and its details. The Orders are placed in a table called **orders** at the postgres Northwind database. The details are placed at the csv file provided, and each line has an **order_id** field pointing the **orders** table.
+### 2 - Configure o Apache Airflow
+Inicialize o Airflow com os comandos abaixo:
 
-## Solution Diagram
+``` bash
+meltano invoke airflow:initialize
+meltano invoke airflow users create -u admin@localhost -p password --role Admin -e admin@localhost -f admin -l admin
+meltano invoke airflow scheduler
+meltano invoke airflow webserver
+```
 
-As Indicium uses some standard tools, the challenge was designed to be done using some of these tools.
+A interface do Airflow estará disponível em: http://localhost:8080
 
-The following tools should be used to solve this challenge.
+### 3 - Configure o banco de dados PostgreSQL
+Inicie o banco de dados northwind que está no docker-compose.yml:
+```bash
+docker-compose up -d
+```
 
-Scheduler:
-- [Airflow](https://airflow.apache.org/docs/apache-airflow/stable/installation/index.html)
+E crie o banco de destino para os dados processados:
+```SQL
+CREATE DATABASE northwind_processed;
+```
 
-Data Loader:
-- [Embulk](https://www.embulk.org) (Java Based)
-**OR**
-- [Meltano](https://docs.meltano.com/?_gl=1*1nu14zf*_gcl_au*MTg2OTE2NDQ4Mi4xNzA2MDM5OTAz) (Python Based)
+E configure o tap-postgres do meltano que já vem ao instalar as dependências do meltano no passo 1.
+```bash
+meltano config tap-postgres set database northwind
+meltano config tap-postgres set host localhost
+meltano config tap-postgres set port 5432
+meltano config tap-postgres set user northwind_user
+meltano config tap-postgres set password thewindisblowing
+```
 
-Database:
-- [PostgreSQL](https://www.postgresql.org/docs/15/index.html)
+A partir disso o tap-postgres já está configurado e é possível testar para verificar se está tudo certinho.
+```bash
+meltano config tap-postgres test
+```
+![alt text](imgs/image1.png)
 
-The solution should be based on the diagrams below:
-![image](docs/diagrama_embulk_meltano.jpg)
+### 4 - Alteração no Diretório Raiz da DAG
+Para que a DAG funcione corretamente, é necessário ajustar o caminho do diretório raiz do projeto. A única modificação necessária é atualizar a variável PROJECT_ROOT no arquivo da DAG indicium_elt para refletir o caminho atual do projeto no seu ambiente.
 
+```
+PROJECT_ROOT = '/seu/diretorio/atual/do/projeto'
+```
 
-### Requirements
+### 5 - Execute a DAG
+Após as configurações já é possível executar a DAG, que pode ser feito tanto pela UI do Airflow, ou por linha de comando
+```bash
+meltano invoke airflow dags trigger indicium-northwind-elt
+```
 
-- You **must** use the tools described above to complete the challenge.
-- All tasks should be idempotent, you should be able to run the pipeline everyday and, in this case where the data is static, the output shold be the same.
-- Step 2 depends on both tasks of step 1, so you should not be able to run step 2 for a day if the tasks from step 1 did not succeed.
-- You should extract all the tables from the source database, it does not matter that you will not use most of them for the final step.
-- You should be able to tell where the pipeline failed clearly, so you know from which step you should rerun the pipeline.
-- You have to provide clear instructions on how to run the whole pipeline. The easier the better.
-- You must provide evidence that the process has been completed successfully, i.e. you must provide a csv or json with the result of the query described above.
-- You should assume that it will run for different days, everyday.
-- Your pipeline should be prepared to run for past days, meaning you should be able to pass an argument to the pipeline with a day from the past, and it should reprocess the data for that day. Since the data for this challenge is static, the only difference for each day of execution will be the output paths.
+Sendo possível até exectuar de uma data anterior
+```bash
+meltano invoke airflow dags trigger -e 2025-01-20 indicium-northwind-elt
+```
 
-### Things that Matters
+![alt text](imgs/image2.png)
 
-- Clean and organized code.
-- Good decisions at which step (which database, which file format..) and good arguments to back those decisions up.
-- The aim of the challenge is not only to assess technical knowledge in the area, but also the ability to search for information and use it to solve problems with tools that are not necessarily known to the candidate.
-- Point and click tools are not allowed.
+## 📊 Resultado Final
+Após a execução do pipeline, os dados são carregados no banco de dados PostgreSQL e organizados em tabelas relacionais, permitindo consultas que combinem tabelas que não estavam presentes no banco inicial.
 
+Por exemplo, é possível executar a consulta que relaciona a order_details com demais tabelas.
+![alt text](imgs/image3.png)
 
-Thank you for participating!
+```SQL
+SELECT 
+    od.order_id,
+    o.ship_region,
+    p.unit_price,
+    p.quantity_per_unit,
+    c.category_name,
+    c.description
+FROM 
+    order_details od
+LEFT JOIN 
+    orders o ON o.order_id = od.order_id
+LEFT JOIN 
+    products p ON p.product_id = od.product_id
+LEFT JOIN 
+    categories c ON c.category_id = p.category_id;
+````
