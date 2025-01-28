@@ -73,6 +73,15 @@ meltano config tap-postgres test
 ```
 ![alt text](imgs/image1.png)
 
+Além de configurar para o target-postgres
+```bash
+meltano config target-postgres set database northwind_processed
+meltano config target-postgres set host localhost
+meltano config target-postgres set port 5432
+meltano config target-postgres set user northwind_user
+meltano config target-postgres set password thewindisblowing
+```
+
 ### 4 - Alteração no Diretório Raiz da DAG
 Para que a DAG funcione corretamente, é necessário ajustar o caminho do diretório raiz do projeto. A única modificação necessária é atualizar a variável PROJECT_ROOT no arquivo da DAG indicium_elt para refletir o caminho atual do projeto no seu ambiente.
 
