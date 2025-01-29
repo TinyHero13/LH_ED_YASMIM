@@ -125,3 +125,6 @@ LEFT JOIN
 LEFT JOIN 
     categories c ON c.category_id = p.category_id;
 ````
+Além da criação de pastas para os dias específicos
+
+![alt text](imgs/image4.png)
