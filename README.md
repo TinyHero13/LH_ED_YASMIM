@@ -1,6 +1,6 @@
 # Indicium - desafio de engenharia de dados
 
-Este repositório contém a solução do [desafio de engenharia](https://github.com/TinyHero13/code-challenge-indicium/blob/main/README.md) de dados proposto pela Indicium. A solução implementa uma pipeline de dados utilizando as ferramentas Meltano e Apache Airflow, além de um banco de dados PostgreSQL.
+Este repositório contém a solução do [desafio de engenharia]([https://github.com/TinyHero13/code-challenge-indicium/blob/main/README.md](https://github.com/TinyHero13/LH_ED_YASMIM/blob/main/README_challenge.md)) de dados proposto pela Indicium. A solução implementa uma pipeline de dados utilizando as ferramentas Meltano e Apache Airflow, além de um banco de dados PostgreSQL.
 
 ## 📑 Descrição do Desafio
 O desafio consiste em construir uma pipeline que:
