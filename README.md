@@ -1,8 +1,8 @@
-#Pipeline de Extração e Processamento de Dados
+# Pipeline de Extração e Processamento de Dados
 
 Esta solução implementa uma pipeline de dados eficiente, utilizando Meltano para extração, Apache Airflow para orquestração e PostgreSQL como banco de dados, garantindo automação, rastreabilidade e reprocessamento de dados.
 
-## Descrição do Desafio
+## Descrição do projeto
 O desafio consiste em construir uma pipeline que:
 
 - Extrai dados de duas fontes: um banco PostgreSQL (Northwind) e um arquivo CSV.
@@ -10,14 +10,14 @@ O desafio consiste em construir uma pipeline que:
 - Carrega os dados do armazenamento local para um banco de dados PostgreSQL.
 - Garante que os dados sejam processados de forma independente e rastreável, com suporte para reprocessamento de datas anteriores.
 
-## Ferramentas Utilizadas
+## Ferramentas utilizadas
 
 - Python: 3.11.5
 - Meltano: 3.6.0
 - Apache Airflow: 2.10.4
 - PostgreSQL: banco northwind e banco de destino northwind_processed.
 
-## Configuração do Ambiente
+## Configuração do ambiente
 
 ### 1 - Instale as dependências
 Clone o repositório e instale as dependências do Python:
