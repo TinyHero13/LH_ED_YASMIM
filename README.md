@@ -1,8 +1,8 @@
-# Indicium - desafio de engenharia de dados
+#Pipeline de Extração e Processamento de Dados
 
-Este repositório contém a solução do [desafio de engenharia]([https://github.com/TinyHero13/code-challenge-indicium/blob/main/README.md](https://github.com/TinyHero13/LH_ED_YASMIM/blob/main/README_challenge.md)) de dados proposto pela Indicium. A solução implementa uma pipeline de dados utilizando as ferramentas Meltano e Apache Airflow, além de um banco de dados PostgreSQL.
+Esta solução implementa uma pipeline de dados eficiente, utilizando Meltano para extração, Apache Airflow para orquestração e PostgreSQL como banco de dados, garantindo automação, rastreabilidade e reprocessamento de dados.
 
-## 📑 Descrição do Desafio
+## Descrição do Desafio
 O desafio consiste em construir uma pipeline que:
 
 - Extrai dados de duas fontes: um banco PostgreSQL (Northwind) e um arquivo CSV.
@@ -10,14 +10,14 @@ O desafio consiste em construir uma pipeline que:
 - Carrega os dados do armazenamento local para um banco de dados PostgreSQL.
 - Garante que os dados sejam processados de forma independente e rastreável, com suporte para reprocessamento de datas anteriores.
 
-## 🛠 Ferramentas Utilizadas
+## Ferramentas Utilizadas
 
 - Python: 3.11.5
 - Meltano: 3.6.0
 - Apache Airflow: 2.10.4
 - PostgreSQL: banco northwind e banco de destino northwind_processed.
 
-## 🖥️ Configuração do Ambiente
+## Configuração do Ambiente
 
 ### 1 - Instale as dependências
 Clone o repositório e instale as dependências do Python:
@@ -102,7 +102,7 @@ meltano invoke airflow dags trigger -e 2025-01-20 indicium-northwind-elt
 
 ![alt text](imgs/image2.png)
 
-## 📊 Resultado Final
+## Resultado Final
 Após a execução do pipeline, os dados são carregados no banco de dados PostgreSQL e organizados em tabelas relacionais, permitindo consultas que combinem tabelas que não estavam presentes no banco inicial.
 
 Por exemplo, é possível executar a consulta que relaciona a order_details com demais tabelas.
