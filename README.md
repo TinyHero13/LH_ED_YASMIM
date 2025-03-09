@@ -1,4 +1,4 @@
-# Pipeline de Extração e Processamento de Dados
+# Pipeline de extração e carregamento de dados
 
 Este projeto consiste em uma pipeline de dados, utilizando Meltano para extração, Apache Airflow para orquestração e PostgreSQL como banco de dados, garantindo automação, rastreabilidade e reprocessamento de dados.
 
